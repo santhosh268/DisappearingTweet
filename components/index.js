@@ -1,80 +1,73 @@
-import React from "react";
-import { Input, DatePicker, Button } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
-import "antd/dist/antd.css";
-import "./inputbox.css";
+import React, { useState, useEffect } from "react";
 import { connect } from "react-redux";
-import { add_tweet } from "../redux/actions";
-import moment from "moment";
+import { delete_tweet } from "../redux/actions";
 
-function InputBox({ tweetVal, addTweet }) {
-  let dateTime = undefined;
-  let diff = 0;
-
-  const disableDate = (current) => {
-    return current < moment().startOf("day");
+function Timer({ getTweet, time, get_index, deletefn }) {
+  const call_deletefn = () => {
+    console.log("Index is ", get_index);
+    delete getTweet.tweet[get_index];
+    const newTweetState = getTweet.tweet;
+    console.log(newTweetState);
+    deletefn(newTweetState);
   };
 
-  const onOk = (value) => {
-    diff = value - new Date();
-    console.log(diff);
-    if (diff > 0) {
-      if (value) {
-        dateTime = value;
-      } else {
-        dateTime = undefined;
-      }
-    } else {
-      alert("Choose Time Greater than Current Time");
-      diff = -1;
+  const calculateTimeLeft = () => {
+    const difference = time - new Date();
+    let timeLeft = {};
+
+    if (difference > 0) {
+      timeLeft = {
+        d: Math.floor(difference / (1000 * 60 * 60 * 24)),
+        hr: Math.floor((difference / (1000 * 60 * 60)) % 24),
+        min: Math.floor((difference / 1000 / 60) % 60),
+        s: Math.floor((difference / 1000) % 60),
+      };
     }
+
+    return timeLeft;
   };
-  const addTweetToList = () => {
-    const text_val = document.getElementById("inputboxval").value;
-    if (text_val.length > 0 && dateTime && diff > 0) {
-      addTweet(text_val, dateTime);
+  const [timeleft, setTimeLeft] = useState(calculateTimeLeft());
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+    return () => clearTimeout(timer);
+  });
+  const timerComponents = [];
+
+  Object.keys(timeleft).forEach((interval) => {
+    if (!timeleft[interval]) {
+      return;
     }
-  };
+
+    timerComponents.push(
+      <span>
+        {timeleft[interval]}
+        {interval}{" "}
+      </span>
+    );
+  });
 
   return (
-    <div className="input_grid">
-      <div className="inputBox">
-        <Input.Group compact>
-          <Input
-            style={{ width: "50%" }}
-            defaultValue="Sample Tweet"
-            id="inputboxval"
-          />
-          <DatePicker
-            showTime
-            disabledDate={disableDate}
-            style={{ width: "50%" }}
-            onOk={onOk}
-          />
-        </Input.Group>
-      </div>
-      <div>
-        <Button
-          shape="circle"
-          icon={<PlusOutlined />}
-          className="button"
-          onClick={addTweetToList}
-        />
-      </div>
+    <div>
+      {timerComponents.length ? (
+        timerComponents
+      ) : (
+        <div>{get_index > -1 && call_deletefn()}</div>
+      )}
     </div>
   );
 }
-
 const mapStateToProps = (state) => {
   return {
-    tweetVal: state.tweet_reducer,
+    getTweet: state.tweet_reducer,
   };
 };
-
 const mapDispatchToProps = (dispatch) => {
   return {
-    addTweet: (text, date) => dispatch(add_tweet(text, date)),
+    deletefn: (tweet) => dispatch(delete_tweet(tweet)),
   };
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(InputBox);
+export default connect(mapStateToProps, mapDispatchToProps)(Timer);
