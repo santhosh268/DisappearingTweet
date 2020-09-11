@@ -1,0 +1,18 @@
+.input_grid {
+  display: grid;
+  grid-template-columns: 11fr 1fr;
+  width: 40%;
+  margin: auto;
+}
+.button {
+  float: left;
+  margin-top: 75%;
+  background-color: blue;
+
+  border-color: blue;
+  color: white;
+}
+.inputBox {
+  margin: auto;
+  margin-top: 7%;
+}
